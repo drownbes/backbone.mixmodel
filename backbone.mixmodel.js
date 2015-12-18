@@ -18,7 +18,8 @@
             options = options || {};
             _.defaults(options, {
                 keyName: 'key',
-                valueName: 'value'
+                valueName: 'value',
+                prefixes: false
             });
             _.extend(options, {
                 parse: true
@@ -36,7 +37,11 @@
                     acc,
                     _.isArray(a[1]) ?
                     (function() {
-                        var names =_ .pluck(a[1], options.keyName);
+                        var names =_(a[1])
+                        .pluck(options.keyName)
+                        .map(function(name) {
+                            return (self.options.prefixes?a[0] + '.' + name:name);
+                        });
                         self.arrayProps[a[0]] = names;
                         return _.object(
                             names,
@@ -62,9 +67,12 @@
                 _.mapObject(this.arrayProps, function(val, key) {
                     var t = _(this.attributes).pick(val);
                     return _.map(t, function(v,k) {
+                        if(this.options.prefixes) {
+                            k = k.replace(new RegExp(key+'\.'),'');
+                        }
                         return _.object(
                             [this.options.keyName, this.options.valueName],
-                            [k,v]
+                            [k, v]
                         );
                     }.bind(this));
                 }.bind(this))
